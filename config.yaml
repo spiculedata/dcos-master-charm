@@ -1,2 +1,5 @@
-
-
+options:
+    bootstrap_url:
+        type: string
+        default: ''
+        description: 'Bootstrap url edit with caution'
