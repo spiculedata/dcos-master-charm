@@ -9,7 +9,7 @@ tags:
   - performance
 subordinate: false
 provides:
-  dcos:
+  dcosmaster:
     interface: dcos
 series:
    - wily

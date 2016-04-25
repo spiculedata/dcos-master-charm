@@ -30,6 +30,10 @@ def install_dcosmaster():
     set_state('dcos-master.installed')
     status_set('active', 'DC/OS Installed')
 
+@when('dcos.available')
+def configure_hook(dcos):
+    dcos.configure()
+
 def createFolders():
     status_set('maintenance', 'Creating DC/OS Folders')
     mkdir(configdir)
@@ -89,7 +93,7 @@ def setupEnvVars():
 def setupMasterConfigs():
     status_set('maintenance', 'Creating master configs')
     text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/exhibitor", 'w')
-    text_file.writelines(["EXHIBITOR_BACKEND=STATIC","EXHIBITOR_STATICENSEMBLE=1:"+ip])
+    text_file.writelines(["EXHIBITOR_BACKEND=STATIC\n","EXHIBITOR_STATICENSEMBLE=1:"+ip])
     text_file.close()
     text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/master_list", 'w')
     text_file.write("[\""+ip+"\"]")
