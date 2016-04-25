@@ -1,4 +1,4 @@
-includes: ['layer:basic']
+includes: ['layer:basic', 'interface:dcos']
 options:
   basic:
     packages:
