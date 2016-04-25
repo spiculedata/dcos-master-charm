@@ -3,3 +3,4 @@ options:
   basic:
     packages:
       - ipset
+repo: https://github.com/buggtb/dcos-master-charm.git
