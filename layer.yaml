@@ -1,4 +1,4 @@
-includes: ['layer:basic']  # if you use any interfaces, add them here
+includes: ['layer:basic']
 options:
   basic:
     packages:
