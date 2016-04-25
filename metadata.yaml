@@ -10,7 +10,7 @@ tags:
 subordinate: false
 provides:
   dcos:
-    interface: master
+    interface: dcos
 series:
    - wily
    - xenial
