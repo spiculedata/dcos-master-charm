@@ -12,7 +12,7 @@ Juju and DC/OS make an excellent fit because it allows administrators to add new
 
 **This charm is currently under heavy development and has limited testing outside of EC2**
 
-Step by step instructions on using the charm:
+Deploying this charm:
 
     juju deploy dcos-master
 

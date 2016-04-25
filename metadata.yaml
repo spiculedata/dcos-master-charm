@@ -1,5 +1,5 @@
 name: dcos-master
-summary: Charm that creates a DCOS Master Node and configures it to accept slave connections.
+summary: Charm that creates a DCOS Master Node.
 maintainer: Tom Barber <info@spicule.co.uk>
 description: |
   This charm creates a DCOS Master node. DCOS is the container operating system from Mesosphere(https://mesosphere.com).
