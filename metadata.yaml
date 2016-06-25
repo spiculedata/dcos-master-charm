@@ -11,6 +11,9 @@ subordinate: false
 provides:
   dcosmaster:
     interface: dcos
+peers:
+   dcos-quorum:
+    interface: dcos
 series:
    - wily
    - xenial

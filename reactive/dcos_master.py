@@ -9,7 +9,7 @@ from charmhelpers.core.hookenv import unit_private_ip, status_set, log
 basedir="/opt/mesosphere/"
 configdir="/etc/mesosphere/"
 au = ArchiveUrlFetchHandler()
-ip = unit_private_ip()
+ip = [unit_private_ip()]
 
 @when_not('dcos-master.installed')
 def install_dcosmaster():
@@ -21,7 +21,7 @@ def install_dcosmaster():
     log("fetching bootstrap")
     setupEnvVars()
     downloadBootstrap()
-    setupMasterConfigs()
+    setupMasterConfigs(ip,True)
     status_set('maintenance', 'Running installer')
     process = check_output(["./pkgpanda", "setup"], cwd=basedir+"bin", env=setupEnvVars())
     log("open ports")
@@ -66,7 +66,8 @@ def createInitFiles():
 def createSymlinks():
     status_set('maintenance', 'Creating DC/OS symlinks')
     #Hack to make start scripts work
-    os.symlink("/bin/mkdir", "/usr/bin/mkdir")
+    if not os.path.isfile("/usr/bin/mkdir"):
+        os.symlink("/bin/mkdir", "/usr/bin/mkdir")
 
 def downloadBootstrap():
     status_set('maintenance', 'Downloading bootstrap tarball')
@@ -90,11 +91,36 @@ def setupEnvVars():
     currentenv['MESOS_IP_DISCOVERY_COMMAND'] = basedir+"bin/detect_ip"
     return currentenv
 
-def setupMasterConfigs():
+def setupMasterConfigs(ips, bootstrap):
+    bs = ""
+    if bootstrap:
+         bs = "packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/"
     status_set('maintenance', 'Creating master configs')
-    text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/exhibitor", 'w')
-    text_file.writelines(["EXHIBITOR_BACKEND=STATIC\n","EXHIBITOR_STATICENSEMBLE=1:"+ip])
+    s = ""
+    t = ""
+    for i in ips:
+        j=1
+        s += str(j)+":"+i+","
+        t += "\""+i+"\""+","
+    s = s[:-1]
+    t = t[:-1]
+    text_file=open(basedir+bs+"etc/exhibitor", 'w')
+    text_file.writelines(["EXHIBITOR_BACKEND=STATIC\n","EXHIBITOR_STATICENSEMBLE="+s])
     text_file.close()
-    text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/master_list", 'w')
-    text_file.write("[\""+ip+"\"]")
+    text_file=open(basedir+bs+"/etc/master_list", 'w')
+    text_file.write("["+t+"]")
     text_file.close()
+    p = ""
+    if bootstrap:
+        p = "etc_master/"
+    else:
+        p ="etc/"
+    text_file=open(basedir+bs+p+"master_count", "w")
+    text_file.writelines(str(len(ips)))
+    text_file.close()
+
+@when('dcos-quorum.joined')
+def getIPs(obj):
+    log("Configuring nodes")
+    nodes  = obj.get_nodes()
+    setupMasterConfigs(nodes, False)
