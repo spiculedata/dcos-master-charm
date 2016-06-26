@@ -123,4 +123,7 @@ def setupMasterConfigs(ips, bootstrap):
 def getIPs(obj):
     log("Configuring nodes")
     nodes  = obj.get_nodes()
+    log("nodes are: "+str(nodes).strip('[]')
     setupMasterConfigs(nodes, False)
+    set_state('dcos-master.installed')
+    status_set('active', 'DC/OS Installed')
