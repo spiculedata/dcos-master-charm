@@ -98,10 +98,11 @@ def setupMasterConfigs(ips, bootstrap):
     status_set('maintenance', 'Creating master configs')
     s = ""
     t = ""
+    j = 1
     for i in ips:
-        j=1
         s += str(j)+":"+i+","
         t += "\""+i+"\""+","
+        j=j+1
     s = s[:-1]
     t = t[:-1]
     text_file=open(basedir+bs+"etc/exhibitor", 'w')
@@ -122,8 +123,14 @@ def setupMasterConfigs(ips, bootstrap):
 @when('dcos-quorum.joined')
 def getIPs(obj):
     log("Configuring nodes")
-    nodes  = obj.get_nodes()
-    log("nodes are: "+str(nodes).strip('[]')
+    nodes  = obj.get_nodes() +ip
+    nodes.sort()
+    log("nodes are: "+str(nodes).strip('[]'))
     setupMasterConfigs(nodes, False)
+    allowed = [1,3,5]
+    if len(nodes) in allowed:
+        check_output(['service','dcos-exhibitor', 'restart'])
+    else:
+        status_set('blocked', 'Waiting for 1, 3 or 5 Master nodes to create quorum')
     set_state('dcos-master.installed')
     status_set('active', 'DC/OS Installed')
