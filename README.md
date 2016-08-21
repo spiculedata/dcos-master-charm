@@ -16,14 +16,20 @@ Deploying this charm:
 
     juju deploy dcos-master
 
-Currently the dashboard is hosted on the nodes internal IP address for EC2 and supported services. The easiest way to gain access is to SSH to the node and forward port 80 to localhost:
+To view the dashboard:
+  
+    juju expose dcos-master
 
-    sudo ssh ubuntu@52.51.37.150 -L 80:localhost:80
+and visit http://<server-url>/ to view the landing page. To view the Zookeeper info you can also visit http://<server-url>:8181.
+
 
 ## Scale out Usage
 
-**Currently not implemented**
 DC/OS provides a master and agent setup. For fault tolerance it is recommended to run more than 1 master node, these are self configuring and distributing.
+
+This DC/OS charm will accept 1,3 or 5 masters. DC/OS performance actually degrades with more and 3 or 5 will provide HA capabaility.
+
+Unlike the DC/OS official installations,  this will allow for scalaing using juju add-unit to add new master nodes.
 
 ## Known Limitations and Issues
 
@@ -31,7 +37,29 @@ This charm is an initial prototype to ensure that the main services bootstrap an
 
 # Configuration
 
-Currently there are no configuration options.
+bootstrap_url: Override the default bootstrap url to allow for a custom distro or alternative install location.
+
+# TODO
+
+Implement disk mounts for NFS and Loopback devices.
+
+Add more actions.
+
+Implement Monitoring.
+
+Improve Security.
+
+Expose running app ports automatically.
+
+Simplify the upgrade process.
+
+ELK to Beats?
+
+Custom Cluster Name
+
+Private Docker Reg
+
+Marathon Load Balancer
 
 # Contact Information
 
