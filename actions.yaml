@@ -1,30 +1,30 @@
 addmarathonapp:
     description: Add a Marathon App (to deploy Docker containers etc) (Requires the DCOS CLI to be installed).
-      params:
-         jsoncontent:
-           type: string
-           description: Escaped JSON content for the marathon file.
+    params:
+       jsoncontent:
+         type: string
+         description: Escaped JSON content for the marathon file.
 authcli:
     description: Authenticate the DCOS CLI (Requires the DCOS CLI to be installed).
-      params:
-         authtoken:
-           type: string
-           description: The auth token fetched from http://<server-url>/login?redirect_uri=urn:ietf:wg:oauth:2.0:oob .
+    params:
+       authtoken:
+         type: string
+         description: The auth token fetched from http://<server-url>/login?redirect_uri=urn:ietf:wg:oauth:2.0:oob .
 dcospackageinstall:
     description: DCOS Package Install (Requires the DCOS CLI to be installed).
-      params:
-         packagename:
-           type: string
-           description: The package name to install.
+    params:
+       packagename:
+         type: string
+         description: The package name to install.
 installcli:
     description: Install the DCOS CLI.
-      params:
-         url:
-           type: string
-           description: The master url.
+    params:
+       url:
+         type: string
+         description: The master url.
 updatemarathonapp:
     description: Update a deployed marathon app (Requires the DCOS CLI to be installed).
-      params:
-         config:
-           type: string
-           description: The parameter to send to marathon.
+    params:
+       config:
+         type: string
+         description: The parameter to send to marathon.
