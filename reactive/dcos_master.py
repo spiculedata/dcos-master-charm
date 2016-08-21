@@ -6,6 +6,8 @@ from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
 from charmhelpers.core import hookenv
 from charmhelpers.core.hookenv import unit_private_ip, status_set, log, resource_get
 from charms.leadership import leader_set, leader_get
+from charms.reactive.helpers import data_changed
+import time
 
 basedir="/opt/mesosphere/"
 configdir="/etc/mesosphere/"
@@ -132,11 +134,12 @@ def getIPs(obj):
     nodes  = obj.get_nodes() +ip
     nodes.sort()
     log("nodes are: "+str(nodes).strip('[]'))
-    if(data_changed('master_ips', nodes)
+    if(data_changed('master_ips', nodes)):
         setupMasterConfigs(nodes, False)
         allowed = [1,3,5]
         if len(nodes) in allowed:
             check_output(['service','dcos-exhibitor', 'restart'])
+            time.sleep(240)
             check_output(['service','dcos-oauth', 'restart'])
         else:
             status_set('blocked', 'Waiting for 1, 3 or 5 Master nodes to create quorum')
