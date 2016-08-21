@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+packagename=`action-get packagename`
+
+dcos package install --yes ${packagename}

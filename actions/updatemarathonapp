@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+config=`action-get config`
+
+dcos marathon app update ${config}

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#http://52.59.138.193/login?redirect_uri=urn:ietf:wg:oauth:2.0:oob 
+
+authtoken=`action-get authtoken`
+
+echo ${authtoken} | dcos auth login
