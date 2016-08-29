@@ -11,9 +11,15 @@ subordinate: false
 provides:
   dcosmaster:
     interface: dcos
+  local-monitors:
+    interface: local-monitors
+
 peers:
    dcos-quorum:
     interface: dcos
+requires:
+    logstash:
+      interface: logstash-client
 series:
    - wily
    - xenial

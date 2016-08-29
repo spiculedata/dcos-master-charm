@@ -6,8 +6,12 @@ options:
     oauth_enabled:
         type: boolean
         default: true
-        description: 'Enable or disable the OAuth authentication(reinstall required)'
-    telementary_enabled:
+        description: '(Not yet enabled)Enable or disable the OAuth authentication(reinstall required)'
+    telemetry_enabled:
         type: boolean
         default: true
-        description: 'Enable or disable the sending of anonymous telemetry to Mesosphere' 
+        description: '(Not yet enabled)Enable or disable the sending of anonymous telemetry to Mesosphere' 
+    cluster_name:
+        type:
+        default: 'DCOS Cluster'
+        description: '(Not yet enabled)Cluster Name'

@@ -3,4 +3,4 @@
 
 authtoken=`action-get authtoken`
 
-echo ${authtoken} | dcos auth login
+echo ${authtoken} | /opt/dcos/bin/dcos auth login

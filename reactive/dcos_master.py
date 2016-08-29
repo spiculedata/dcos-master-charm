@@ -24,9 +24,6 @@ def install_dcosmaster():
     log("fetching bootstrap")
     setupEnvVars()
     downloadBootstrap()
-    #setupMasterConfigs(ip,True)
-    #status_set('maintenance', 'Running installer')
-    #process = check_output(["./pkgpanda", "setup"], cwd=basedir+"bin", env=setupEnvVars())
     log("open ports")
     hookenv.open_port(80)
     hookenv.open_port(8181)
@@ -193,3 +190,21 @@ def startDCOS():
     status_set('maintenance', 'Running installer')
     process = check_output(["./pkgpanda", "setup"], cwd=basedir+"bin", env=setupEnvVars())
 
+
+@when('logstash.available')
+def start_up_logger(logstash):
+    log('logstash available')
+    #start_logger(logstash.private_address(), logstash.tcp_port())
+
+@when('local-monitors.available')
+def setup_nagios(nagios):
+    config = hookenv.config()
+    unit_name = hookenv.local_unit()
+    nagios.add_check(['/usr/lib/nagios/plugins/check_http',
+            '-I', '127.0.0.1', '-p', str(config['port']),
+            '-e', " 200 OK", '-u', '/publickey'],
+        name="check_http",
+        description="Verify my awesome service is responding",
+        context=config["nagios_context"],
+        unit=unit_name,
+    )

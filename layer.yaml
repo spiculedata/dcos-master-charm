@@ -1,4 +1,4 @@
-includes: ['layer:basic', 'interface:dcos', 'layer:leadership']
+includes: ['layer:basic', 'interface:dcos', 'layer:leadership','interface:logstash-client', 'interface:local-monitors']
 options:
   basic:
     packages:

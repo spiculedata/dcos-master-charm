@@ -8,7 +8,7 @@ mkdir /opt/dcos && cd /opt/dcos
 
 curl -o /opt/dcos/install.sh -O https://downloads.dcos.io/dcos-cli/install.sh
 
-bash install.sh . ${url} --add-path yes
+bash -c "cd /opt/dcos/ && install.sh . ${url} --add-path yes"
 
 source /opt/dcos/bin/env-setup
 
