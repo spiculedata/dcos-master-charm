@@ -200,11 +200,11 @@ def start_up_logger(logstash):
 def setup_nagios(nagios):
     config = hookenv.config()
     unit_name = hookenv.local_unit()
-    nagios.add_check(['/usr/lib/nagios/plugins/check_http',
-            '-I', '127.0.0.1', '-p', str(config['port']),
-            '-e', " 200 OK", '-u', '/publickey'],
-        name="check_http",
-        description="Verify my awesome service is responding",
-        context=config["nagios_context"],
+    au.download("https://raw.githubusercontent.com/buggtb/dcos-master-charm/master/monitoring_scripts/check_service.sh", "/usr/bin/check_service.sh")    
+    au.download("https://raw.githubusercontent.com/buggtb/dcos-master-charm/master/monitoring_scripts/dcos_unit_check.sh", "/usr/bin/dcos_unit_check.sh")
+    nagios.add_check(['/usr/bin/dcos_unit_check.sh'],
+        name="check_dcos_master",
+        description="Verify DCOS Master Services",
+        context="dcos_master",
         unit=unit_name,
     )
