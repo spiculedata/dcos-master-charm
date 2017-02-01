@@ -4,12 +4,15 @@ from subprocess import check_call, CalledProcessError, call, check_output, Popen
 from charmhelpers.core.host import adduser, chownr, mkdir
 from charmhelpers.fetch.archiveurl import ArchiveUrlFetchHandler
 from charmhelpers.core import hookenv
-from charmhelpers.core.hookenv import unit_private_ip, status_set, log
+from charmhelpers.core.hookenv import unit_private_ip, status_set, log, resource_get
+from charms.leadership import leader_set, leader_get
+from charms.reactive.helpers import data_changed
+import time
 
 basedir="/opt/mesosphere/"
 configdir="/etc/mesosphere/"
 au = ArchiveUrlFetchHandler()
-ip = unit_private_ip()
+ip = [unit_private_ip()]
 
 @when_not('dcos-master.installed')
 def install_dcosmaster():
@@ -21,14 +24,15 @@ def install_dcosmaster():
     log("fetching bootstrap")
     setupEnvVars()
     downloadBootstrap()
-    setupMasterConfigs()
-    status_set('maintenance', 'Running installer')
-    process = check_output(["./pkgpanda", "setup"], cwd=basedir+"bin", env=setupEnvVars())
     log("open ports")
     hookenv.open_port(80)
     hookenv.open_port(8181)
     set_state('dcos-master.installed')
-    status_set('active', 'DC/OS Installed')
+    status_set('maintenance', 'DC/OS Installed, waiting for start')
+
+@when('dcos.available')
+def configure_hook(dcos):
+    dcos.configure()
 
 def createFolders():
     status_set('maintenance', 'Creating DC/OS Folders')
@@ -62,13 +66,17 @@ def createInitFiles():
 def createSymlinks():
     status_set('maintenance', 'Creating DC/OS symlinks')
     #Hack to make start scripts work
-    os.symlink("/bin/mkdir", "/usr/bin/mkdir")
+    if not os.path.isfile("/usr/bin/mkdir"):
+        os.symlink("/bin/mkdir", "/usr/bin/mkdir")
 
 def downloadBootstrap():
     status_set('maintenance', 'Downloading bootstrap tarball')
-    au.download("http://meteorite.bi/downloads/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
+    au.download("http://community.meteorite.bi/tmp/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
+    #p = resource_get("software")
+    p = "/tmp/bootstrap.tar.gz"
+    log("path is: "+p)
     #We unzip using tar on the command line because its much quicker than using python.
-    check_output(['tar', 'xvfz', "/tmp/bootstrap.tar.gz", '-C', basedir])
+    check_output(['tar', 'xvfz', p, '-C', basedir])
 
 def setupEnvVars():
     status_set('maintenance', 'Configuring the install environment variables')
@@ -86,11 +94,117 @@ def setupEnvVars():
     currentenv['MESOS_IP_DISCOVERY_COMMAND'] = basedir+"bin/detect_ip"
     return currentenv
 
-def setupMasterConfigs():
+def setupMasterConfigs(ips, bootstrap):
+    bs = ""
+    if bootstrap:
+         bs = "packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/"
     status_set('maintenance', 'Creating master configs')
-    text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/exhibitor", 'w')
-    text_file.writelines(["EXHIBITOR_BACKEND=STATIC","EXHIBITOR_STATICENSEMBLE=1:"+ip])
+    s = ""
+    t = ""
+    j = 1
+    for i in ips:
+        s += str(j)+":"+i+","
+        t += "\""+i+"\""+","
+        j=j+1
+    s = s[:-1]
+    t = t[:-1]
+    text_file=open(basedir+bs+"etc/exhibitor", 'w')
+    log("Writing to:"+basedir+bs+"etc/exhibitor")
+    text_file.writelines(["EXHIBITOR_BACKEND=STATIC\n","EXHIBITOR_STATICENSEMBLE="+s])
     text_file.close()
-    text_file=open(basedir+"packages/dcos-config--setup_b3e41695178e35239659186b92f25820c610f961/etc/master_list", 'w')
-    text_file.write("[\""+ip+"\"]")
+    text_file=open(basedir+bs+"/etc/master_list", 'w')
+    text_file.write("["+t+"]")
     text_file.close()
+    p = ""
+    if bootstrap:
+        p = "etc_master/"
+    else:
+        p ="etc/"
+    text_file=open(basedir+bs+p+"master_count", "w")
+    text_file.writelines(str(len(ips)))
+    text_file.close()
+
+@when('dcos-quorum.joined')
+@when('dcos-master.running')
+def getIPs(obj):
+    log("Configuring nodes")
+    nodes  = obj.get_nodes() +ip
+    nodes.sort()
+    log("nodes are: "+str(nodes).strip('[]'))
+    if(data_changed('master_ips', nodes)):
+        setupMasterConfigs(nodes, False)
+        allowed = [1,3,5]
+        if len(nodes) in allowed:
+            check_output(['service','dcos-exhibitor', 'restart'])
+            time.sleep(240)
+            check_output(['service','dcos-oauth', 'restart'])
+        else:
+            status_set('blocked', 'Waiting for 1, 3 or 5 Master nodes to create quorum')
+    #get and set cluster-id and auth-token from leader
+#    set_state('dcos-master.installed')
+    status_set('active', 'DC/OS Installed')
+
+@when('leadership.is_leader')
+@when('dcos-master.installed')
+def setProperties():
+    startDCOS()
+    if os.path.isfile('/var/lib/dcos/cluster-id'):
+        text_file=open('/var/lib/dcos/cluster-id')
+    else:
+        text_file=open('/var/lib/dcos/cluster-id.tmp')
+    cid = text_file.read()
+    text_file.close()
+    text_file=open('/var/lib/dcos/auth-token-secret')
+    ats = text_file.read()
+    text_file.close()
+    leader_set(cluster=cid)
+    leader_set(authtoken=ats)
+    set_state('dcos-master.running')
+    status_set('active', 'DC/OS started')
+
+@when_not('leadership.is_leader')
+@when('dcos-master.installed')
+@when('leadership.set.cluster')
+@when('leadership.set.authtoken')
+def setSlaveProperties():
+    cid = leader_get('cluster')
+    ats = leader_get('authtoken')
+    directory = '/var/lib/dcos'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    f = open('/var/lib/dcos/cluster-id', 'w')
+    f.write(cid)
+    f.close()
+    f = open('/var/lib/dcos/auth-token-secret', 'w')
+    f.write(ats)
+    f.close()
+    startDCOS()
+    set_state('dcos-master.running')
+    status_set('active', 'DC/OS started')
+
+
+@when('dcos-master.installed')
+@when_not('dcos-master.running')
+def startDCOS():
+    setupMasterConfigs(ip,True)
+    status_set('maintenance', 'Running installer')
+    process = check_output(["./pkgpanda", "setup"], cwd=basedir+"bin", env=setupEnvVars())
+
+
+@when('logstash.available')
+def start_up_logger(logstash):
+    log('logstash available')
+    #start_logger(logstash.private_address(), logstash.tcp_port())
+
+@when('local-monitors.available')
+def setup_nagios(nagios):
+    config = hookenv.config()
+    unit_name = hookenv.local_unit()
+    au.download("https://raw.githubusercontent.com/buggtb/dcos-master-charm/master/monitoring_scripts/check_service.sh", "/usr/bin/check_service.sh")    
+    au.download("https://raw.githubusercontent.com/buggtb/dcos-master-charm/master/monitoring_scripts/dcos_unit_check.sh", "/usr/bin/dcos_unit_check.sh")
+    nagios.add_check(['/usr/bin/dcos_unit_check.sh'],
+        name="check_dcos_master",
+        description="Verify DCOS Master Services",
+        context="dcos_master",
+        unit=unit_name,
+    )

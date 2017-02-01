@@ -3,3 +3,15 @@ options:
         type: string
         default: ''
         description: 'Bootstrap url edit with caution'
+    oauth_enabled:
+        type: boolean
+        default: true
+        description: '(Not yet enabled)Enable or disable the OAuth authentication(reinstall required)'
+    telemetry_enabled:
+        type: boolean
+        default: true
+        description: '(Not yet enabled)Enable or disable the sending of anonymous telemetry to Mesosphere' 
+    cluster_name:
+        type:
+        default: 'DCOS Cluster'
+        description: '(Not yet enabled)Cluster Name'

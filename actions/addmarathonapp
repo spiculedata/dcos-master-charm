@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+jsoncontent=`action-get jsoncontent`
+
+echo ${jsoncontent} > /tmp/marathon.json
+
+dcos marathon app add /tmp/marathon.json

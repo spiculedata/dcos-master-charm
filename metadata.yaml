@@ -9,8 +9,22 @@ tags:
   - performance
 subordinate: false
 provides:
-  dcos:
+  dcosmaster:
     interface: dcos
+  local-monitors:
+    interface: local-monitors
+
+peers:
+   dcos-quorum:
+    interface: dcos
+requires:
+    logstash:
+      interface: logstash-client
 series:
    - wily
    - xenial
+#resources:
+#  software:
+#    type: file
+#    filename: bootstrap.tar.gz
+#    description: "A slightly customised DC/OS distro for use with the charm."

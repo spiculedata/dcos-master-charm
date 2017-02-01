@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+url=`action-get url`
+
+pip install virtualenv
+
+mkdir /opt/dcos && cd /opt/dcos
+
+curl -o /opt/dcos/install.sh -O https://downloads.dcos.io/dcos-cli/install.sh
+
+bash -c "cd /opt/dcos/ && chmod +x ./install.sh && ./install.sh . ${url} --add-path yes"
+
+source /opt/dcos/bin/env-setup
+
