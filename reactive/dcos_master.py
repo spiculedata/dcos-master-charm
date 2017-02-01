@@ -71,7 +71,7 @@ def createSymlinks():
 
 def downloadBootstrap():
     status_set('maintenance', 'Downloading bootstrap tarball')
-    au.download("http://community.meteorite.bi/tmp/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
+    au.download("http://meteorite.bi/downloads/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
     #p = resource_get("software")
     p = "/tmp/bootstrap.tar.gz"
     log("path is: "+p)
