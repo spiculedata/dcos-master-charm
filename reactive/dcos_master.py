@@ -66,7 +66,7 @@ def createSymlinks():
 
 def downloadBootstrap():
     status_set('maintenance', 'Downloading bootstrap tarball')
-    au.download("http://community.meteorite.bi/tmp/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
+    au.download("http://meteorite.bi/downloads/bootstrap.tar.gz", "/tmp/bootstrap.tar.gz")
     #We unzip using tar on the command line because its much quicker than using python.
     check_output(['tar', 'xvfz', "/tmp/bootstrap.tar.gz", '-C', basedir])
 
